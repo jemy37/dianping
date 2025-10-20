@@ -4,5 +4,38 @@ GET http://localhost:8080/api/shop/list?page=1&size=10
 ### Get shop by id
 GET http://localhost:8080/api/shop/1
 
+### Get shop by name 
+GET http://localhost:8080/api/shop/of/name?name=测试商铺1&current=1&size=10
+
 ### Get shop by type (typeId=1)
 GET http://localhost:8080/api/shop/of/type?typeId=1&current=1&size=10
+
+
+### Update shop info (requires auth)
+PUT http://localhost:8080/api/shop/update
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "新名字餐厅",
+  "typeId": 2,
+  "images": "[\"https://example.com/1.png\"]",
+  "area": "浦东新区",
+  "address": "XX街道 123 号",
+  "x": 121.4737,
+  "y": 31.2304,
+  "avgPrice": 80,
+  "openHours": "09:00-21:00"
+}
+
+### Example: update only a few fields (partial update)
+PUT http://localhost:8080/api/shop/update
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "部分更新：新名字",
+  "address": "新地址 456"
+}

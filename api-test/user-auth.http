@@ -21,11 +21,29 @@ Content-Type: application/json
   "code": "753908"
 }
 
+
+### Get profile
+GET http://localhost:8080/api/user/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+
+
+### Update profile
+PUT http://localhost:8080/api/user/update
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+
+{
+  "NickName" : "Jemy",
+		"Icon" : "None"
+}
+
+
+
 # After login you'll receive JSON with token: copy token to use below
 
 ### Example: Seckill purchase (requires Authorization header)
 # Replace {{TOKEN}} with the returned token and voucher id as needed
-POST http://localhost:8080/api/voucher-order/seckill/2
+POST http://localhost:8080/api/voucher-order/seckill/13
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
 
