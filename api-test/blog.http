@@ -1,0 +1,34 @@
+### Create a blog (requires auth)
+POST http://localhost:8080/api/blog
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjA3OTA4NTgsIm5iZiI6MTc2MDcwNDQ1OCwiaWF0IjoxNzYwNzA0NDU4fQ.JsClqNIBbzvjiQv6zOsMrsuy8YD0BUNdgVFbQRXjJvw
+Content-Type: application/json
+
+{
+  "title": "测试博客标题",
+  "content": "这是测试博客的内容，用于接口验证。",
+  "images": "[]",
+  "shopId": 1
+}
+
+### Like a blog (requires auth)
+PUT http://localhost:8080/api/blog/like/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjA3OTA4NTgsIm5iZiI6MTc2MDcwNDQ1OCwiaWF0IjoxNzYwNzA0NDU4fQ.JsClqNIBbzvjiQv6zOsMrsuy8YD0BUNdgVFbQRXjJvw
+
+
+### Get hot blog list (public)
+GET http://localhost:8080/api/blog/hot?page=1&size=10
+
+
+### Get my blog list (requires auth)
+GET http://localhost:8080/api/blog/of/me?page=1&size=10
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjA3OTA4NTgsIm5iZiI6MTc2MDcwNDQ1OCwiaWF0IjoxNzYwNzA0NDU4fQ.JsClqNIBbzvjiQv6zOsMrsuy8YD0BUNdgVFbQRXjJvw
+
+
+### Get blog by id (public)
+GET http://localhost:8080/api/blog/1
+
+
+### Get blogs of follows (requires auth)
+# Uses cursor pagination parameters: lastId (last returned score), offset (same score offset), count (items to return)
+GET http://localhost:8080/api/blog/of/follow?lastId=0&offset=0&count=10
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjA3OTA4NTgsIm5iZiI6MTc2MDcwNDQ1OCwiaWF0IjoxNzYwNzA0NDU4fQ.JsClqNIBbzvjiQv6zOsMrsuy8YD0BUNdgVFbQRXjJvw

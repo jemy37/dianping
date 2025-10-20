@@ -1,0 +1,4 @@
+### Get shop type list
+GET http://localhost:8080/api/shop-type/list
+
+### Expected: 200 and JSON array of shop types

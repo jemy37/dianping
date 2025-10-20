@@ -15,7 +15,20 @@ local orderKey = "cache:seckill_voucher:order:" .. voucherId
 
 -- 3. 脚本业务
 -- 3.1 判断库存是否充足
-if(tonumber(redis.call('get', stockKey)) <= 0) then
+-- 获取库存，兼容 key 不存在的情况
+local stockVal = redis.call('get', stockKey)
+if (not stockVal) then
+    -- 如果没有缓存库存，认为库存不足（或让上层加载缓存），返回库存不足
+    return 1
+end
+
+local stock = tonumber(stockVal)
+if (not stock) then
+    -- 如果库存不是数字，返回错误标识为库存不足
+    return 1
+end
+
+if (stock <= 0) then
     return 1
 end
 -- 3.2 判断用户是否重复下单
@@ -28,5 +41,9 @@ redis.call('incrby', stockKey, -1)
 -- 3.4 下单（保存用户）
 redis.call('sadd', orderKey, userId)
 -- 3.5 下单（保存用户）
+-- 确保 orderId 不为 nil，若上层未提供则记录空字符串
+if not orderId then
+    orderId = ""
+end
 redis.call('xadd', 'stream.orders', '*', 'userId', userId, 'voucherId', voucherId, 'id', orderId)
 return 0

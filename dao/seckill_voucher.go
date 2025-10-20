@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"dianping/models"
-	"encoding/json"
 	"strconv"
 	"time"
 
@@ -71,9 +70,27 @@ const (
 
 func SetSeckillVoucherStockCache(ctx context.Context, rds *redis.Client, voucherID uint, stock int) error {
 	key := SeckillVoucherCache + strconv.Itoa(int(voucherID))
-	data, err := json.Marshal(stock)
-	if err != nil {
+	// data, err := json.Marshal(stock)
+	data := strconv.Itoa(stock)
+	// if err != nil {
+	// 	return err
+	// }
+	return rds.Set(ctx, key, data, time.Hour).Err()
+}
+
+// LoadActiveSeckillVouchersToCache 将当前生效的秒杀券的库存加载到 Redis 缓存
+func LoadActiveSeckillVouchersToCache(ctx context.Context, rds *redis.Client) error {
+	var vouchers []models.SeckillVoucher
+	now := time.Now()
+	if err := DB.WithContext(ctx).Where("begin_time <= ? AND end_time >= ?", now, now).Find(&vouchers).Error; err != nil {
 		return err
 	}
-	return rds.Set(ctx, key, data, time.Hour).Err()
+
+	for _, v := range vouchers {
+		if err := SetSeckillVoucherStockCache(ctx, rds, v.VoucherID, v.Stock); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

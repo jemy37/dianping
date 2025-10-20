@@ -13,11 +13,12 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"gorm.io/gorm"
 )
 
 // SeckillVoucher 秒杀优惠券
 func SeckillVoucher(ctx context.Context, userId, voucherId uint) *utils.Result {
-	// 从文件当中加载脚本
+	// 从文件当中加载脚本（缓存已读内容）
 	script, err := os.ReadFile("script/seckill.lua")
 	if err != nil {
 		log.Printf("读取秒杀脚本失败: %v", err)
@@ -25,8 +26,20 @@ func SeckillVoucher(ctx context.Context, userId, voucherId uint) *utils.Result {
 	}
 	scriptStr := string(script)
 
+	// 生成临时 orderId 并传入 Lua 脚本以便 xadd 中包含 id 字段
+	var orderId string
+	if idWorker == nil {
+		idWorker = utils.NewRedisIdWorker(dao.Redis, 16)
+	}
+	if id, err := idWorker.NextId(ctx, "order"); err == nil {
+		orderId = strconv.FormatInt(id, 10)
+	} else {
+		log.Printf("生成orderId失败: %v", err)
+		orderId = ""
+	}
+
 	// 1. 执行Lua脚本
-	result := dao.Redis.Eval(ctx, scriptStr, []string{}, strconv.Itoa(int(voucherId)), strconv.Itoa(int(userId)))
+	result := dao.Redis.Eval(ctx, scriptStr, []string{}, strconv.Itoa(int(voucherId)), strconv.Itoa(int(userId)), orderId)
 	if result.Err() != nil {
 		log.Printf("执行秒杀脚本失败: %v", result.Err())
 		return utils.ErrorResult("系统错误")
@@ -66,6 +79,7 @@ var (
 	streamOnce    sync.Once             // 确保Stream只初始化一次
 	stopChan      = make(chan struct{}) // 停止信号
 	wg            sync.WaitGroup        // 等待组，用于优雅关闭
+	idWorker      *utils.RedisIdWorker
 )
 
 // InitStreamConsumer 初始化Redis Stream消费者
@@ -273,6 +287,46 @@ func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID str
 		}
 	}()
 
+	// 1) 检查用户是否已经有秒杀券订单（防止重复）
+	exists, err := dao.CheckSeckillVoucherOrderExists(ctx, tx, userID, voucherID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("检查重复订单失败: %v", err)
+	}
+	if exists {
+		// 用户已下单，直接回滚事务并返回 nil（视为已处理）
+		tx.Rollback()
+		log.Printf("用户已存在秒杀订单: userID=%d, voucherID=%d", userID, voucherID)
+		return nil
+	}
+
+	// 2) 在事务内扣减秒杀券库存（保证与订单创建在同一事务）
+	// Use raw SQL expression for atomic decrement
+	result := tx.Model(&models.SeckillVoucher{}).
+		Where("voucher_id = ? AND stock >= ?", voucherID, 1).
+		UpdateColumn("stock", gorm.Expr("stock - ?", 1))
+	if result.Error != nil {
+		tx.Rollback()
+		return fmt.Errorf("更新库存失败: %v", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return fmt.Errorf("库存不足")
+	}
+
+	// 3) 同步扣减关联的普通券库存（tb_voucher）——保证与上面操作在同一事务中
+	vResult := tx.Model(&models.Voucher{}).
+		Where("id = ? AND stock >= ?", voucherID, 1).
+		UpdateColumn("stock", gorm.Expr("stock - ?", 1))
+	if vResult.Error != nil {
+		tx.Rollback()
+		return fmt.Errorf("更新关联券库存失败: %v", vResult.Error)
+	}
+	if vResult.RowsAffected == 0 {
+		tx.Rollback()
+		return fmt.Errorf("关联券库存不足")
+	}
+
 	// 创建订单
 	now := time.Now()
 	order := &models.VoucherOrder{
@@ -291,8 +345,7 @@ func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID str
 	}
 
 	// 创建订单记录
-	err := dao.CreateVoucherOrder(ctx, tx, order)
-	if err != nil {
+	if err := dao.CreateVoucherOrder(ctx, tx, order); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("创建订单失败: %v", err)
 	}

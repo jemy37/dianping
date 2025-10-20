@@ -1,0 +1,21 @@
+### Get vouchers for shop 2
+GET http://localhost:8080/api/voucher/list/2
+
+### Get seckill voucher details (voucher id 2)
+GET http://localhost:8080/api/voucher/seckill/2
+
+### Add seckill voucher (admin-like)
+POST http://localhost:8080/api/voucher/seckill
+Content-Type: application/json
+
+{
+  "shopId": 2,
+  "title": "测试秒杀",
+  "subTitle": "测试",
+  "rules": "测试规则",
+  "payValue": 100,
+  "actualValue": 200,
+  "stock": 5,
+  "beginTime": "2025-10-28T00:00:00Z",
+  "endTime": "2025-11-28T00:00:00Z"
+}

@@ -62,13 +62,19 @@ func JWTMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token := strings.TrimPrefix(authorization, "Bearer ")
+		// 取出 token 并去除首尾空格
+		token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer"))
 		claims, err := ParseToken(token)
 		if err != nil {
+			// 解析失败或无效 token
 			ErrorResponse(c, http.StatusUnauthorized, "token无效")
 			c.Abort()
 			return
 		}
+
+		// debug-safe: claims 已经不为空（ParseToken 返回非 nil 时），可以安全使用
+		// 使用标准日志而不是 println
+		// log.Printf("token after parse issuer=%s", claims.Issuer)
 
 		// 将用户ID存储到上下文中
 		c.Set("userID", claims.UserID)

@@ -37,12 +37,19 @@ func main() {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
 
+	// 启动时将当前生效的秒杀券库存加载到 Redis 缓存（缓存丢失时可恢复）
+	if err := dao.LoadActiveSeckillVouchersToCache(context.Background(), dao.Redis); err != nil {
+		log.Printf("Warning: failed to load seckill voucher cache: %v", err)
+		// 不阻止服务启动，但记录日志以便排查
+	}
+
 	// 自动迁移数据库表
 	if err := dao.DB.AutoMigrate(
 		&models.User{},
 		&models.Shop{},
 		&models.ShopType{},
 		&models.Voucher{},
+		&models.SeckillVoucher{},
 		&models.VoucherOrder{},
 		&models.Blog{},
 		&models.Follow{},
@@ -109,6 +116,7 @@ func main() {
 }
 
 // initBloomFilters 初始化布隆过滤器
+// docker run -d --name redis-stack -p 6379:6379 redis/redis-stack:latest
 func initBloomFilters() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

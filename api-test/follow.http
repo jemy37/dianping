@@ -1,0 +1,18 @@
+### Follow a user (requires auth)
+POST http://localhost:8080/api/follow/2
+Authorization: Bearer 
+
+
+### Unfollow a user (requires auth)
+DELETE http://localhost:8080/api/follow/2
+Authorization: Bearer 
+
+
+### Get common follows between me and another user (requires auth)
+GET http://localhost:8080/api/follow/common/3
+Authorization: Bearer 
+
+
+### Get my feed (blogs from follows) - alternative way (already in blog.http)
+GET http://localhost:8080/api/blog/of/follow?lastId=0&offset=0&count=10
+Authorization: Bearer 

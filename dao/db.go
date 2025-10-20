@@ -36,6 +36,8 @@ func InitDB() error {
 	)
 
 	var err error
+
+	println()
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})

@@ -1,0 +1,33 @@
+### Request verification code for phone 13800000000
+POST http://localhost:8080/api/user/code?phone=13800000000
+
+### Register user (if needed)
+POST http://localhost:8080/api/user/register
+Content-Type: application/json
+
+{
+  "phone": "13800000000",
+  "code": "753908",
+  "password": "pass1234",
+  "nickName": "测试用户1"
+}
+
+### Login (you need the code from server logs or set in Redis)
+POST http://localhost:8080/api/user/login
+Content-Type: application/json
+
+{
+  "phone": "13800000000",
+  "code": "753908"
+}
+
+# After login you'll receive JSON with token: copy token to use below
+
+### Example: Seckill purchase (requires Authorization header)
+# Replace {{TOKEN}} with the returned token and voucher id as needed
+POST http://localhost:8080/api/voucher-order/seckill/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+
+# No body needed for seckill endpoint
+

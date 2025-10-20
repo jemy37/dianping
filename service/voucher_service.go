@@ -43,9 +43,9 @@ func AddSeckillVoucher(ctx context.Context, req *AddSeckillVoucherRequest) *util
 		return utils.ErrorResult("开始时间不能早于当前时间")
 	}
 
-	// 验证价格逻辑
-	if req.PayValue <= req.ActualValue {
-		return utils.ErrorResult("支付金额必须大于实际价值")
+	// 验证价格逻辑：支付金额应该小于面值（即用户支付的金额应低于优惠券实际价值）
+	if req.PayValue >= req.ActualValue {
+		return utils.ErrorResult("支付金额必须小于实际价值")
 	}
 
 	// 开启事务
