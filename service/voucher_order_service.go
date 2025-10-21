@@ -36,6 +36,8 @@ func SeckillVoucher(ctx context.Context, userId, voucherId uint) *utils.Result {
 	} else {
 		log.Printf("生成orderId失败: %v", err)
 		orderId = ""
+		//test
+		println(orderId)
 	}
 
 	// 1. 执行Lua脚本
@@ -168,7 +170,6 @@ func streamConsumer(consumerName string, workerID int) {
 				if err != nil {
 					log.Printf("消费者 %s 处理消息失败: msgID=%s, error=%v",
 						consumerName, msg.ID, err)
-					// 这里可以添加重试逻辑或将失败消息放入死信队列
 				} else {
 					log.Printf("消费者 %s 成功处理消息: msgID=%s", consumerName, msg.ID)
 					// 确认消息已处理
@@ -263,10 +264,10 @@ func parseOrderMessage(msg redis.XMessage) (*StreamOrderInfo, error) {
 		return nil, fmt.Errorf("消息中缺少voucherId字段")
 	}
 
-	if orderID, ok := msg.Values["id"].(string); ok {
+	if orderID, ok := msg.Values["orderId"].(string); ok {
 		orderInfo.OrderID = orderID
 	} else {
-		return nil, fmt.Errorf("消息中缺少id字段")
+		return nil, fmt.Errorf("消息中缺少orderId字段")
 	}
 
 	return orderInfo, nil
@@ -340,8 +341,13 @@ func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID str
 
 	// 如果Lua脚本提供了订单ID，可以使用它
 	if orderID != "" {
-		// 这里可以根据需要设置订单ID或其他字段
-		// 注意：GORM的ID字段通常是自增的，需要根据实际情况处理
+		// 尝试将 string orderID 解析为无符号整数并保存到模型的 OrderID 字段
+		if id64, err := strconv.ParseUint(orderID, 10, 64); err == nil {
+			order.OrderID = uint(id64)
+		} else {
+			// 解析失败则记录警告，但不阻止下单
+			log.Printf("警告: 解析 orderId (%s) 为整数失败: %v", orderID, err)
+		}
 	}
 
 	// 创建订单记录
@@ -356,8 +362,9 @@ func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID str
 		return fmt.Errorf("提交事务失败: %v", err)
 	}
 
-	log.Printf("成功创建订单: userID=%d, voucherID=%d, orderID=%d",
-		userID, voucherID, order.ID)
+	// 记录创建成功：包含 DB 自增主键和原始 orderId 字符串（如果有）
+	log.Printf("成功创建订单: userID=%d, voucherID=%d, dbID=%d, orderID=%s",
+		userID, voucherID, order.ID, orderID)
 
 	return nil
 }

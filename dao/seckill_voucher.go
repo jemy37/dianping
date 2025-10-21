@@ -82,7 +82,7 @@ func SetSeckillVoucherStockCache(ctx context.Context, rds *redis.Client, voucher
 func LoadActiveSeckillVouchersToCache(ctx context.Context, rds *redis.Client) error {
 	var vouchers []models.SeckillVoucher
 	now := time.Now()
-	if err := DB.WithContext(ctx).Where("begin_time <= ? AND end_time >= ?", now, now).Find(&vouchers).Error; err != nil {
+	if err := DB.WithContext(ctx).Where("end_time >= ?", now).Find(&vouchers).Error; err != nil {
 		return err
 	}
 

@@ -17,12 +17,11 @@ func GetShopTypeList(ctx context.Context) *utils.Result {
 	// 从数据库中获取
 	shopTypes, err = dao.GetShopTypeList(ctx, dao.DB)
 	if err != nil {
-		return utils.ErrorResult("查询失败")
+		return utils.ErrorResult("查询失败: " + err.Error())
 	}
 	// 缓存到redis
-	err = dao.SetShopTypeListCache(ctx, dao.Redis, shopTypes)
-	if err != nil {
-		return utils.ErrorResult("查询失败")
+	if err = dao.SetShopTypeListCache(ctx, dao.Redis, shopTypes); err != nil {
+		println("警告: 设置 ShopType 缓存失败: " + err.Error())
 	}
 
 	return utils.SuccessResultWithData(shopTypes)

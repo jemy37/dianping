@@ -12,6 +12,7 @@ type ShopType struct {
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	TypeID    uint           `json:"typeId"`
 	Name      string         `gorm:"size:32" json:"name"`
 	Icon      string         `gorm:"size:255" json:"icon"`
 	Sort      int            `json:"sort"`

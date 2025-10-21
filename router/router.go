@@ -39,7 +39,7 @@ func SetupRouter() *gin.Engine {
 			shopGroup.GET("/:id", handler.GetShopById)                                  // 通过商铺ID 获取商铺信息√
 			shopGroup.GET("/of/type", handler.GetShopByType)                            // 根据类型获取商铺√
 			shopGroup.GET("/of/name", handler.GetShopByName)                            // 根据名称搜索商铺√
-			shopGroup.POST("", handler.SaveShop)                                        // 新增商铺
+			shopGroup.POST("/createShop", handler.SaveShop)                             // 新增商铺
 			shopGroup.PUT("/update", handler.UpdateShop)                                // 更新商铺√
 			shopGroup.GET("/:id/nearby", utils.JWTMiddleware(), handler.GetNearbyShops) // 获取某个商铺附近的商铺
 		}
@@ -47,13 +47,13 @@ func SetupRouter() *gin.Engine {
 		// 商铺类型相关路由
 		shopTypeGroup := api.Group("/shop-type")
 		{
-			shopTypeGroup.GET("/list", handler.GetShopTypeList)
+			shopTypeGroup.GET("/list", handler.GetShopTypeList) //获取shop-tpye list order by sort √
 		}
 
 		// 优惠券相关路由
 		voucherGroup := api.Group("/voucher")
 		{
-			voucherGroup.GET("/list/:shopId", handler.GetVoucherList)   // 根据商铺ID信息获取优惠券列表
+			voucherGroup.GET("/list/:shopId", handler.GetVoucherList)   // 根据商铺ID信息获取优惠券列表√
 			voucherGroup.POST("", handler.AddVoucher)                   // TODO: 实现新增普通券功能
 			voucherGroup.POST("/seckill", handler.AddSeckillVoucher)    // 新增秒杀券√
 			voucherGroup.GET("/seckill/:id", handler.GetSeckillVoucher) // 获取秒杀券详情√

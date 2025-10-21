@@ -65,8 +65,39 @@ func GetShopByName(c *gin.Context) {
 
 // SaveShop 新增商铺
 func SaveShop(c *gin.Context) {
-	// TODO: 实现新增商铺功能
-	utils.ErrorResponse(c, http.StatusNotImplemented, "功能未完成")
+	var req struct {
+		Name   string `json:"name" binding:"required"`
+		TypeID uint   `json:"typeId"`
+		// TypeName  string  `json:"typeName"`
+		TypeIcon  string  `json:"typeIcon"`
+		Images    string  `json:"images"`
+		Area      string  `json:"area"`
+		Address   string  `json:"address"`
+		X         float64 `json:"x"`
+		Y         float64 `json:"y"`
+		AvgPrice  int     `json:"avgPrice"`
+		OpenHours string  `json:"openHours"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "参数校验失败: "+err.Error())
+		return
+	}
+
+	shop := &models.Shop{
+		Name:      req.Name,
+		TypeID:    req.TypeID,
+		Images:    req.Images,
+		Area:      req.Area,
+		Address:   req.Address,
+		X:         req.X,
+		Y:         req.Y,
+		AvgPrice:  req.AvgPrice,
+		OpenHours: req.OpenHours,
+	}
+
+	result := service.CreateShopWithType(c.Request.Context(), shop, req.TypeIcon)
+	utils.Response(c, result)
 }
 
 // UpdateShop 更新商铺信息

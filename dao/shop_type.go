@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -27,13 +28,13 @@ const (
 
 func GetShopTypeListCache(ctx context.Context, rds *redis.Client) ([]*models.ShopType, error) {
 	key := ShopTypeCache
-	result := rds.Get(ctx, key)
-	if result.Err() != nil {
-		return nil, result.Err()
+	str, err := rds.Get(ctx, key).Result()
+	if err != nil {
+		return nil, err
 	}
 
 	var shopTypes []*models.ShopType
-	if err := result.Scan(&shopTypes); err != nil {
+	if err := json.Unmarshal([]byte(str), &shopTypes); err != nil {
 		return nil, err
 	}
 	return shopTypes, nil
@@ -41,9 +42,9 @@ func GetShopTypeListCache(ctx context.Context, rds *redis.Client) ([]*models.Sho
 
 func SetShopTypeListCache(ctx context.Context, rds *redis.Client, shopTypes []*models.ShopType) error {
 	// 设置一小时的过期时间
-	err := rds.Set(ctx, ShopTypeCache, shopTypes, time.Hour).Err()
+	b, err := json.Marshal(shopTypes)
 	if err != nil {
 		return err
 	}
-	return nil
+	return rds.Set(ctx, ShopTypeCache, b, time.Hour).Err()
 }

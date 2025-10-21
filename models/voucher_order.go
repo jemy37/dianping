@@ -9,6 +9,7 @@ import (
 // VoucherOrder 优惠券订单模型
 type VoucherOrder struct {
 	ID         uint           `gorm:"primarykey" json:"id"`
+	OrderID    uint           `json:"orderId"`
 	CreatedAt  time.Time      `json:"createdAt"`
 	UpdatedAt  time.Time      `json:"updatedAt"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`

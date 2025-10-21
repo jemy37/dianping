@@ -1,0 +1,17 @@
+### Create shop with new type (typeId omitted -> create type using typeName/typeIcon)
+POST http://localhost:8080/api/shop/createShop
+Content-Type: application/json
+
+{
+  "name": "新星new咖啡",
+  "typeId": 0,
+  "typeIcon": "https://example.com/icons/coffee.png",
+  "images": "[\"https://example.com/shops/1.png\"]",
+  "area": "黄浦区",
+  "address": "人民路99号",
+  "x": 121.4800,
+  "y": 31.2200,
+  "avgPrice": 60,
+  "openHours": "08:00-22:00"
+}
+

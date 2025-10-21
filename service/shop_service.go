@@ -203,3 +203,39 @@ func GetNearbyShops(ctx context.Context, shopId uint, radius float64, count int)
 	// 3. 返回结果
 	return utils.SuccessResultWithData(shopIds)
 }
+
+// CreateShopWithType 创建类型商铺
+
+func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string) *utils.Result {
+	tx := dao.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	st := &models.ShopType{
+		Name:   shop.Name,
+		Icon:   typeIcon,
+		Sort:   int(shop.TypeID),
+		TypeID: shop.TypeID,
+	}
+	if err := dao.CreateShopType(ctx, tx, st); err != nil {
+		tx.Rollback()
+		return utils.ErrorResult("创建商铺类型失败: " + err.Error())
+	}
+	// 创建商铺
+	if err := dao.CreateShop(ctx, tx, shop); err != nil {
+		tx.Rollback()
+		return utils.ErrorResult("创建商铺失败: " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return utils.ErrorResult("提交事务失败: " + err.Error())
+	}
+
+	// 清理/刷新与商铺相关的缓存或地理位置信息（如果需要）由调用方处理或异步处理
+
+	return utils.SuccessResultWithData(shop.ID)
+}

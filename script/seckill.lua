@@ -45,5 +45,5 @@ redis.call('sadd', orderKey, userId)
 if not orderId then
     orderId = ""
 end
-redis.call('xadd', 'stream.orders', '*', 'userId', userId, 'voucherId', voucherId, 'id', orderId)
+redis.call('xadd', 'stream.orders', '*', 'userId', userId, 'voucherId', voucherId, 'orderId', orderId)
 return 0

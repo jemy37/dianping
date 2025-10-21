@@ -18,7 +18,7 @@ Content-Type: application/json
 
 {
   "phone": "13800000000",
-  "code": "753908"
+  "code": "689084"
 }
 
 
@@ -33,19 +33,13 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
 
 {
-  "NickName" : "Jemy",
+  "NickName" : "Jemy1",
 		"Icon" : "None"
 }
 
-
-
-# After login you'll receive JSON with token: copy token to use below
-
-### Example: Seckill purchase (requires Authorization header)
-# Replace {{TOKEN}} with the returned token and voucher id as needed
-POST http://localhost:8080/api/voucher-order/seckill/13
+### Seckill purchase 
+POST http://localhost:8080/api/voucher-order/seckill/14
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjExMzYzNTUsIm5iZiI6MTc2MTA0OTk1NSwiaWF0IjoxNzYxMDQ5OTU1fQ.1x8L4PJ9tncZBX2p1WqwGa7-YmZkGb7B_STEeCsuuAo
 
-# No body needed for seckill endpoint
 

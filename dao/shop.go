@@ -150,3 +150,13 @@ func GetNearbyShops(ctx context.Context, rds *redis.Client, shop *models.Shop, r
 	}
 	return shopIds, nil
 }
+
+// CreateShop 插入新的商铺记录
+func CreateShop(ctx context.Context, db *gorm.DB, shop *models.Shop) error {
+	return db.WithContext(ctx).Create(shop).Error
+}
+
+// CreateShopType 插入新的商铺类型记录
+func CreateShopType(ctx context.Context, db *gorm.DB, shopType *models.ShopType) error {
+	return db.WithContext(ctx).Create(shopType).Error
+}
