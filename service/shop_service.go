@@ -7,6 +7,8 @@ import (
 	"dianping/utils"
 	"fmt"
 	"log"
+	"math/rand/v2"
+	"net/url"
 	"time"
 )
 
@@ -207,6 +209,59 @@ func GetNearbyShops(ctx context.Context, shopId uint, radius float64, count int)
 // CreateShopWithType 创建类型商铺
 
 func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string) *utils.Result {
+	//使用本地 mutex 限制同进程并发
+	shopTypeListLocalLock.Lock()
+	defer shopTypeListLocalLock.Unlock()
+
+	// 使用按 name 的分布式锁，避免并发创建重复的 ShopType
+	typeName := shop.Name
+	//通过escape 转义特殊字符
+	lockKey := fmt.Sprintf("lock:shop_type:name:%s", url.QueryEscape(typeName))
+	ok, lockValue := utils.TryLockWithTTL(ctx, dao.Redis, lockKey, 5*time.Second)
+	if !ok {
+		maxWait := 1000 * time.Millisecond
+		base := 50 * time.Millisecond
+		waited := time.Duration(0)
+		for waited <= maxWait {
+
+			//尝试再拿锁
+			if ok2, lockValue2 := utils.TryLockWithTTL(ctx, dao.Redis, lockKey, 5*time.Second); ok2 {
+				lockValue = lockValue2
+				break
+			}
+			// 等待指数退避+随机抖动
+			sleep := base + time.Duration(rand.IntN(50))*time.Millisecond
+			time.Sleep(sleep)
+			waited += sleep
+			base *= 2
+			if base > 500*time.Millisecond {
+				base = 500 * time.Millisecond
+			}
+		}
+		// 未拿到锁：短等待后再次检查数据库
+		time.Sleep(50 * time.Millisecond)
+		if existing, err := dao.GetShopById(ctx, dao.DB, shop.ID); err == nil && existing != nil {
+			return utils.SuccessResultWithData(existing)
+
+		} else {
+			return utils.ErrorResult("操作超时，请重试")
+		}
+	} else {
+		// 拿到锁，确保释放
+		defer func() {
+			if ok := utils.UnLockSafe(ctx, dao.Redis, lockKey, lockValue); !ok {
+				log.Printf("警告: 释放 shop_type:name 锁失败: %s", typeName)
+			}
+		}()
+	}
+
+	// 再次检查 DB，以防并发已创建
+	if existing, err := dao.GetShopById(ctx, dao.DB, shop.ID); err == nil && existing != nil {
+
+		return utils.SuccessResultWithData(existing)
+	}
+
+	// 没有则创建shop
 	tx := dao.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -215,16 +270,20 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 	}()
 
 	st := &models.ShopType{
-		Name:   shop.Name,
-		Icon:   typeIcon,
-		Sort:   int(shop.TypeID),
-		TypeID: shop.TypeID,
+		Name: typeName,
+		Icon: typeIcon,
 	}
 	if err := dao.CreateShopType(ctx, tx, st); err != nil {
 		tx.Rollback()
 		return utils.ErrorResult("创建商铺类型失败: " + err.Error())
 	}
-	// 创建商铺
+	// 用回写ID的方式设置 Sort = int(st.ID)
+	st.Sort = int(st.ID)
+	if err := dao.UpdateShopType(ctx, tx, st); err != nil {
+		tx.Rollback()
+		return utils.ErrorResult("更新 ShopType Sort 失败: " + err.Error())
+	}
+	shop.TypeID = st.ID
 	if err := dao.CreateShop(ctx, tx, shop); err != nil {
 		tx.Rollback()
 		return utils.ErrorResult("创建商铺失败: " + err.Error())
@@ -234,8 +293,6 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 		tx.Rollback()
 		return utils.ErrorResult("提交事务失败: " + err.Error())
 	}
-
-	// 清理/刷新与商铺相关的缓存或地理位置信息（如果需要）由调用方处理或异步处理
 
 	return utils.SuccessResultWithData(shop.ID)
 }

@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -18,6 +19,24 @@ func GetShopTypeList(ctx context.Context, db *gorm.DB) ([]*models.ShopType, erro
 		return nil, err
 	}
 	return shopTypes, nil
+}
+
+// GetShopTypeByName 根据 name 查询 ShopType，找不到返回 (nil, nil)
+func GetShopTypeByName(ctx context.Context, db *gorm.DB, name string) (*models.ShopType, error) {
+	var st models.ShopType
+	err := db.WithContext(ctx).Where("name = ?", name).First(&st).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &st, nil
+}
+
+// UpdateShopType 更新 ShopType，通常用于回写 Sort 字段
+func UpdateShopType(ctx context.Context, db *gorm.DB, st *models.ShopType) error {
+	return db.WithContext(ctx).Model(&models.ShopType{}).Where("id = ?", st.ID).Updates(st).Error
 }
 
 // ===========缓存相关=============
