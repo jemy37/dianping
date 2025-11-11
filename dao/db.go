@@ -14,12 +14,14 @@ import (
 )
 
 // 全局数据库连接实例
+// EN: Global DB and Redis clients
 var (
 	DB    *gorm.DB
 	Redis *redis.Client
 )
 
 // InitDB 初始化MySQL数据库连接
+// EN: Initialize MySQL connection with GORM and pool settings
 func InitDB() error {
 	cfg := config.GetConfig()
 	if cfg == nil {
@@ -61,6 +63,7 @@ func InitDB() error {
 }
 
 // InitRedis 初始化Redis连接
+// EN: Initialize Redis client and verify connectivity
 func InitRedis() error {
 	cfg := config.GetConfig()
 	if cfg == nil {
@@ -87,6 +90,7 @@ func InitRedis() error {
 }
 
 // CloseDB 关闭数据库连接
+// EN: Close underlying sql.DB
 func CloseDB() error {
 	if DB != nil {
 		sqlDB, err := DB.DB()
@@ -99,6 +103,7 @@ func CloseDB() error {
 }
 
 // CloseRedis 关闭Redis连接
+// EN: Close Redis client
 func CloseRedis() error {
 	if Redis != nil {
 		return Redis.Close()

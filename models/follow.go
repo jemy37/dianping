@@ -7,6 +7,7 @@ import (
 )
 
 // Follow 关注模型
+// EN: Follow relationship model
 type Follow struct {
 	ID           uint           `gorm:"primarykey" json:"id"`
 	CreatedAt    time.Time      `json:"createdAt"`

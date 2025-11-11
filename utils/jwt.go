@@ -9,12 +9,14 @@ import (
 )
 
 // Claims JWT声明
+// EN: Custom JWT claims containing user ID
 type Claims struct {
 	UserID uint `json:"userId"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成JWT token
+// EN: Generate a signed JWT for the given user ID
 func GenerateToken(userID uint) (string, error) {
 	cfg := config.GetConfig()
 	if cfg == nil {
@@ -36,6 +38,7 @@ func GenerateToken(userID uint) (string, error) {
 }
 
 // ParseToken 解析JWT token
+// EN: Parse and validate the given JWT string
 func ParseToken(tokenString string) (*Claims, error) {
 	cfg := config.GetConfig()
 	if cfg == nil {

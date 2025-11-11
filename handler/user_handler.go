@@ -10,6 +10,7 @@ import (
 )
 
 // UserRegister 用户注册
+// EN: Register a new user
 func UserRegister(c *gin.Context) {
 	var req struct {
 		Phone    string `json:"phone" binding:"required"`
@@ -28,6 +29,7 @@ func UserRegister(c *gin.Context) {
 }
 
 // UserLogin 用户登录
+// EN: Login with phone and code
 func UserLogin(c *gin.Context) {
 	// 这里只能支持验证码登录
 	var req struct {
@@ -56,7 +58,38 @@ func UserLogin(c *gin.Context) {
 	utils.Response(c, result)
 }
 
+// UserPasswordLogin 用户密码登录（手机号或昵称）
+// EN: Login with password using phone or nickname
+func UserPasswordLogin(c *gin.Context) {
+    var req struct {
+        Phone    string `json:"phone"`
+        NickName string `json:"nickName"`
+        Password string `json:"password" binding:"required,min=6"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.ErrorResponse(c, http.StatusBadRequest, "参数错误: "+err.Error())
+        return
+    }
+    if req.Phone == "" && req.NickName == "" {
+        utils.ErrorResponse(c, http.StatusBadRequest, "需要提供手机号或昵称")
+        return
+    }
+    var result *utils.Result
+    if req.NickName != "" {
+        result = service.UserPasswordLogin(req.NickName, req.Password, true)
+    } else {
+        // 若提供 phone，校验手机号格式
+        if ok := utils.IsPhoneValid(req.Phone); !ok {
+            utils.ErrorResponse(c, http.StatusBadRequest, "手机号格式不正确")
+            return
+        }
+        result = service.UserPasswordLogin(req.Phone, req.Password, false)
+    }
+    utils.Response(c, result)
+}
+
 // GetUserInfo 获取用户信息
+// EN: Get current user info
 func GetUserInfo(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -69,6 +102,7 @@ func GetUserInfo(c *gin.Context) {
 }
 
 // UpdateUserInfo 更新用户信息
+// EN: Update current user profile
 func UpdateUserInfo(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -91,12 +125,14 @@ func UpdateUserInfo(c *gin.Context) {
 }
 
 // UserLogout 用户登出
+// EN: Logout (stateless JWT; client discards token)
 func UserLogout(c *gin.Context) {
 	// TODO: 实现登出逻辑，清除token等
 	utils.SuccessResponse(c, "登出成功")
 }
 
 // SendCode 发送验证码
+// EN: Send login verification code
 func SendCode(c *gin.Context) {
 	phone := c.Query("phone")
 	if phone == "" {
@@ -113,6 +149,7 @@ func SendCode(c *gin.Context) {
 }
 
 // Sign 用户签到
+// EN: Daily user sign-in
 func Sign(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

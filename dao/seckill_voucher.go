@@ -11,11 +11,13 @@ import (
 )
 
 // CreateSeckillVoucher 创建秒杀券
+// EN: Create seckill voucher record
 func CreateSeckillVoucher(seckillVoucher *models.SeckillVoucher) error {
 	return DB.Create(seckillVoucher).Error
 }
 
 // GetSeckillVoucherByID 根据优惠券ID获取秒杀券信息
+// EN: Get seckill voucher detail by voucher ID
 func GetSeckillVoucherByID(voucherID uint) (*models.SeckillVoucher, error) {
 	var seckillVoucher models.SeckillVoucher
 	err := DB.Where("voucher_id = ?", voucherID).First(&seckillVoucher).Error
@@ -26,16 +28,19 @@ func GetSeckillVoucherByID(voucherID uint) (*models.SeckillVoucher, error) {
 }
 
 // UpdateSeckillVoucher 更新秒杀券信息
+// EN: Update seckill voucher
 func UpdateSeckillVoucher(seckillVoucher *models.SeckillVoucher) error {
 	return DB.Save(seckillVoucher).Error
 }
 
 // DeleteSeckillVoucher 删除秒杀券
+// EN: Delete seckill voucher by voucher ID
 func DeleteSeckillVoucher(voucherID uint) error {
 	return DB.Where("voucher_id = ?", voucherID).Delete(&models.SeckillVoucher{}).Error
 }
 
 // UpdateSeckillVoucherStock 更新秒杀券库存（原子操作）
+// EN: Atomically decrement seckill stock
 func UpdateSeckillVoucherStock(voucherID uint, stock int) error {
 	result := DB.Model(&models.SeckillVoucher{}).
 		Where("voucher_id = ? AND stock >= ?", voucherID, stock).
@@ -54,6 +59,7 @@ func UpdateSeckillVoucherStock(voucherID uint, stock int) error {
 }
 
 // CheckSeckillVoucherExists 检查秒杀券是否存在
+// EN: Check if seckill voucher exists
 func CheckSeckillVoucherExists(voucherID uint) (bool, error) {
 	var count int64
 	err := DB.Model(&models.SeckillVoucher{}).Where("voucher_id = ?", voucherID).Count(&count).Error
@@ -79,6 +85,7 @@ func SetSeckillVoucherStockCache(ctx context.Context, rds *redis.Client, voucher
 }
 
 // LoadActiveSeckillVouchersToCache 将当前生效的秒杀券的库存加载到 Redis 缓存
+// EN: Preload current active seckill voucher stocks into Redis
 func LoadActiveSeckillVouchersToCache(ctx context.Context, rds *redis.Client) error {
 	var vouchers []models.SeckillVoucher
 	now := time.Now()

@@ -104,6 +104,41 @@ func UserLogin(phone, code string) *utils.Result {
 	})
 }
 
+// UserPasswordLogin 允许通过手机号+密码或昵称+密码登录
+func UserPasswordLogin(identifier, password string, byNick bool) *utils.Result {
+    var user *models.User
+    var err error
+    if byNick {
+        user, err = dao.GetUserByNickName(identifier)
+    } else {
+        user, err = dao.GetUserByPhone(identifier)
+    }
+    if err != nil || user == nil {
+        return utils.ErrorResult("用户不存在")
+    }
+
+    // 校验密码
+    if !utils.CheckPassword(password, user.Password) {
+        return utils.ErrorResult("密码错误")
+    }
+
+    // 生成 JWT
+    token, err := utils.GenerateToken(user.ID)
+    if err != nil {
+        return utils.ErrorResult("登录失败")
+    }
+
+    return utils.SuccessResultWithData(map[string]interface{}{
+        "token": token,
+        "user": map[string]interface{}{
+            "id":       user.ID,
+            "phone":    user.Phone,
+            "nickName": user.NickName,
+            "icon":     user.Icon,
+        },
+    })
+}
+
 // GetUserInfo 获取用户信息服务
 func GetUserInfo(userID uint) *utils.Result {
 	user, err := dao.GetUserByID(userID)

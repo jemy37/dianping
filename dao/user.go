@@ -29,6 +29,16 @@ func GetUserByID(userID uint) (*models.User, error) {
 	return &user, nil
 }
 
+// GetUserByNickName 根据昵称查询用户
+func GetUserByNickName(nick string) (*models.User, error) {
+    var user models.User
+    err := DB.Where("nick_name = ?", nick).First(&user).Error
+    if err != nil {
+        return nil, err
+    }
+    return &user, nil
+}
+
 // CreateUser 创建新用户
 func CreateUser(user *models.User) error {
 	return DB.Create(user).Error

@@ -7,6 +7,7 @@ import (
 )
 
 // Blog 博客模型
+// EN: Blog entity model
 type Blog struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"createdAt"`

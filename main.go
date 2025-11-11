@@ -116,6 +116,7 @@ func main() {
 }
 
 // initBloomFilters 初始化布隆过滤器
+// EN: Initialize Redis Bloom filters for shops/users/vouchers
 // docker run -d --name redis-stack -p 6379:6379 redis/redis-stack:latest
 func initBloomFilters() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

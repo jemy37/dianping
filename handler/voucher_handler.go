@@ -10,6 +10,7 @@ import (
 )
 
 // GetVoucherList 获取优惠券列表
+// EN: Get voucher list by shop ID
 func GetVoucherList(c *gin.Context) {
 	shopIdStr := c.Param("shopId")
 	if shopIdStr == "" {
@@ -28,12 +29,21 @@ func GetVoucherList(c *gin.Context) {
 }
 
 // AddVoucher 新增普通券
+// EN: Create a normal voucher (non-seckill)
 func AddVoucher(c *gin.Context) {
-	// TODO: 实现新增普通券功能
-	utils.ErrorResponse(c, http.StatusNotImplemented, "功能未完成")
+    var req service.AddVoucherRequest
+
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.ErrorResponse(c, http.StatusBadRequest, "请求参数错误: "+err.Error())
+        return
+    }
+
+    result := service.AddVoucher(c.Request.Context(), &req)
+    utils.Response(c, result)
 }
 
 // AddSeckillVoucher 新增秒杀券
+// EN: Create a seckill voucher
 func AddSeckillVoucher(c *gin.Context) {
 	var req service.AddSeckillVoucherRequest
 

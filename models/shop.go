@@ -7,6 +7,7 @@ import (
 )
 
 // Shop 商铺模型
+// EN: Shop entity model
 type Shop struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"createdAt"`

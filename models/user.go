@@ -7,6 +7,7 @@ import (
 )
 
 // User 用户模型
+// EN: User entity model
 type User struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"createdAt"`

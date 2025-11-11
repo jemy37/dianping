@@ -11,6 +11,7 @@ import (
 )
 
 // GetShopById 根据ID获取商铺
+// EN: Get shop by ID
 func GetShopById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -24,6 +25,7 @@ func GetShopById(c *gin.Context) {
 }
 
 // GetShopList 获取商铺列表
+// EN: Get shop list (paginated)
 func GetShopList(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
@@ -33,6 +35,7 @@ func GetShopList(c *gin.Context) {
 }
 
 // GetShopByType 根据类型获取商铺
+// EN: Get shops by type (with pagination)
 func GetShopByType(c *gin.Context) {
 	typeIdStr := c.Query("typeId")
 	if typeIdStr == "" {
@@ -54,6 +57,7 @@ func GetShopByType(c *gin.Context) {
 }
 
 // GetShopByName 根据名称搜索商铺
+// EN: Search shops by name
 func GetShopByName(c *gin.Context) {
 	name := c.Query("name")
 	page, _ := strconv.Atoi(c.DefaultQuery("current", "1"))
@@ -64,6 +68,7 @@ func GetShopByName(c *gin.Context) {
 }
 
 // SaveShop 新增商铺
+// EN: Create a shop (with optional type)
 func SaveShop(c *gin.Context) {
 	var req struct {
 		Name   string `json:"name" binding:"required"`
@@ -101,6 +106,7 @@ func SaveShop(c *gin.Context) {
 }
 
 // UpdateShop 更新商铺信息
+// EN: Update a shop and evict cache
 func UpdateShop(c *gin.Context) {
 	// 1. 参数校验
 	var shop models.Shop
@@ -115,6 +121,7 @@ func UpdateShop(c *gin.Context) {
 }
 
 // GetNearbyShops 获取某个店铺的附近某个距离的所有点
+// EN: Get nearby shops around a given shop
 func GetNearbyShops(c *gin.Context) {
 	// 1. 参数校验
 	idStr := c.Param("id")

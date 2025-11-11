@@ -1,0 +1,19 @@
+### Add normal voucher (public, adjust to your needs)
+POST http://localhost:8080/api/voucher
+Content-Type: application/json
+
+{
+  "shopId": 4,
+  "title": "测试普通券",
+  "subTitle": "新人专享",
+  "rules": "满100减20，工作日可用",
+  "payValue": 80,
+  "actualValue": 100,
+  "stock": 50,
+  "beginTime": "2025-10-28T00:00:00Z",
+  "endTime": "2025-12-31T23:59:59Z"
+}
+
+### Verify by listing vouchers of the shop
+GET http://localhost:8080/api/voucher/list/4
+

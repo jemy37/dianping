@@ -53,6 +53,10 @@ func LikeBlog(ctx context.Context, userId, blogId uint) *utils.Result {
 			if err := dao.DecrementBlogLiked(ctx, blogId); err != nil {
 				return utils.ErrorResult("更新点赞数失败")
 			}
+			// 删除数据库中的点赞记录
+			if err := dao.DeleteBlogLikeByUser(ctx, userId, blogId); err != nil {
+				return utils.ErrorResult("取消点赞失败")
+			}
 			return utils.SuccessResult("取消点赞成功")
 		}
 		if err := dao.IncrementBlogLiked(ctx, blogId); err != nil {
@@ -60,6 +64,10 @@ func LikeBlog(ctx context.Context, userId, blogId uint) *utils.Result {
 		}
 		// 保存用户 id 到 redis 集合
 		if err := dao.SaveLikedMember(ctx, dao.Redis, userId, blogId); err != nil {
+			return utils.ErrorResult("保存点赞失败")
+		}
+		// 在数据库中创建点赞记录
+		if err := dao.CreateBlogLike(ctx, &models.BlogLike{UserID: userId, BlogID: blogId}); err != nil {
 			return utils.ErrorResult("保存点赞失败")
 		}
 		return utils.SuccessResult("点赞成功")
@@ -141,6 +149,29 @@ func GetMyBlogList(ctx context.Context, userId uint, page, size int) *utils.Resu
 		"page":  page,
 		"size":  size,
 	})
+}
+
+// GetBlogsByShop 获取某个商铺的博客列表
+func GetBlogsByShop(ctx context.Context, shopId uint, page, size int, userId uint) *utils.Result {
+    offset := (page - 1) * size
+    blogs, total, err := dao.GetBlogsByShop(ctx, shopId, offset, size)
+    if err != nil {
+        return utils.ErrorResult("查询失败")
+    }
+
+    // 标注是否点赞（若提供了登录用户）
+    for i := range blogs {
+        if err := isBlogLiked(ctx, &blogs[i], userId); err != nil {
+            return utils.ErrorResult("检查点赞状态失败")
+        }
+    }
+
+    return utils.SuccessResultWithData(map[string]interface{}{
+        "list":  blogs,
+        "total": total,
+        "page":  page,
+        "size":  size,
+    })
 }
 
 func GetBlogLikes(ctx context.Context, blogId uint) *utils.Result {

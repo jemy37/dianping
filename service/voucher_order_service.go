@@ -17,6 +17,7 @@ import (
 )
 
 // SeckillVoucher 秒杀优惠券
+// EN: Seckill purchase entry. Runs Lua for stock/user checks and publishes to Redis Stream.
 func SeckillVoucher(ctx context.Context, userId, voucherId uint) *utils.Result {
 	// 从文件当中加载脚本（缓存已读内容）
 	script, err := os.ReadFile("script/seckill.lua")
@@ -67,6 +68,7 @@ func SeckillVoucher(ctx context.Context, userId, voucherId uint) *utils.Result {
 }
 
 // StreamOrderInfo Redis Stream中的订单信息结构体
+// EN: Order info payload structure stored in Redis Stream
 type StreamOrderInfo struct {
 	UserID    string `json:"userId"`
 	VoucherID string `json:"voucherId"`
@@ -74,6 +76,7 @@ type StreamOrderInfo struct {
 }
 
 // Stream消费者相关配置
+// EN: Redis Stream consumer configuration
 var (
 	streamKey     = "stream.orders"     // Stream名称
 	groupName     = "order-group"       // 消费者组名称
@@ -85,6 +88,7 @@ var (
 )
 
 // InitStreamConsumer 初始化Redis Stream消费者
+// EN: Initialize Redis Stream consumers (group + workers)
 func InitStreamConsumer() error {
 	var initErr error
 	streamOnce.Do(func() {
@@ -134,6 +138,7 @@ func InitStreamConsumer() error {
 }
 
 // checkStreamExists 检查Stream是否存在
+// EN: Check if the Stream key exists in Redis
 func checkStreamExists(ctx context.Context, streamKey string) (bool, error) {
 	result := dao.Redis.Exists(ctx, streamKey)
 	if result.Err() != nil {
@@ -143,6 +148,7 @@ func checkStreamExists(ctx context.Context, streamKey string) (bool, error) {
 }
 
 // streamConsumer Stream消费者worker
+// EN: Worker loop that reads and processes Stream messages
 func streamConsumer(consumerName string, workerID int) {
 	defer wg.Done()
 
@@ -186,6 +192,7 @@ func streamConsumer(consumerName string, workerID int) {
 }
 
 // readStreamMessages 从Stream中读取消息
+// EN: Read pending first, then new messages from the Stream
 func readStreamMessages(ctx context.Context, consumerName string) ([]redis.XMessage, error) {
 	// 首先尝试读取pending消息（之前未确认的消息）
 	pendingResult := dao.Redis.XReadGroup(ctx, &redis.XReadGroupArgs{
@@ -225,6 +232,7 @@ func readStreamMessages(ctx context.Context, consumerName string) ([]redis.XMess
 }
 
 // processStreamMessage 处理单条Stream消息
+// EN: Parse and dispatch a single Stream message
 func processStreamMessage(ctx context.Context, msg redis.XMessage, consumerName string) error {
 	// 解析消息内容
 	orderInfo, err := parseOrderMessage(msg)
@@ -248,6 +256,7 @@ func processStreamMessage(ctx context.Context, msg redis.XMessage, consumerName 
 }
 
 // parseOrderMessage 解析订单消息
+// EN: Parse order fields from Stream message values
 func parseOrderMessage(msg redis.XMessage) (*StreamOrderInfo, error) {
 	orderInfo := &StreamOrderInfo{}
 
@@ -274,6 +283,7 @@ func parseOrderMessage(msg redis.XMessage) (*StreamOrderInfo, error) {
 }
 
 // processStreamOrder 处理Stream中的订单
+// EN: Transactionally check idempotency, decrement stock and create order
 func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID string) error {
 	// 开始数据库事务
 	tx := dao.DB.Begin()
@@ -370,6 +380,7 @@ func processStreamOrder(ctx context.Context, userID, voucherID uint, orderID str
 }
 
 // StopStreamConsumers 停止所有Stream消费者（用于优雅关闭）
+// EN: Gracefully stop all Stream consumer workers
 func StopStreamConsumers() {
 	log.Println("正在停止Stream消费者...")
 	close(stopChan)
@@ -378,6 +389,7 @@ func StopStreamConsumers() {
 }
 
 // GetStreamInfo 获取Stream状态信息（用于监控）
+// EN: Get Stream/groups/consumers info for monitoring
 func GetStreamInfo() (map[string]interface{}, error) {
 	ctx := context.Background()
 

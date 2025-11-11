@@ -7,6 +7,7 @@ import (
 )
 
 // Voucher 优惠券模型
+// EN: Voucher entity model (type 0=normal, 1=seckill)
 type Voucher struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
 	CreatedAt   time.Time      `json:"createdAt"`

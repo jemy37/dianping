@@ -18,7 +18,7 @@ Content-Type: application/json
 
 {
   "phone": "13800000000",
-  "code": "689084"
+  "code": "879112"
 }
 
 
@@ -38,7 +38,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzc
 }
 
 ### Seckill purchase 
-POST http://localhost:8080/api/voucher-order/seckill/14
+POST http://localhost:8080/api/voucher-order/seckill/17
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjExMzYzNTUsIm5iZiI6MTc2MTA0OTk1NSwiaWF0IjoxNzYxMDQ5OTU1fQ.1x8L4PJ9tncZBX2p1WqwGa7-YmZkGb7B_STEeCsuuAo
 

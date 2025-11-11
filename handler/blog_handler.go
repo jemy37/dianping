@@ -10,6 +10,7 @@ import (
 )
 
 // CreateBlog 创建博客
+// EN: Create a blog post
 func CreateBlog(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -34,6 +35,7 @@ func CreateBlog(c *gin.Context) {
 }
 
 // LikeBlog 点赞博客
+// EN: Like a blog post
 func LikeBlog(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -53,6 +55,7 @@ func LikeBlog(c *gin.Context) {
 }
 
 // GetBlogList 获取博客列表
+// EN: Get blog list (paginated)
 func GetBlogList(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
@@ -62,6 +65,7 @@ func GetBlogList(c *gin.Context) {
 }
 
 // GetBlogOfFollow 获取关注用户的博客列表
+// EN: Get blogs from followed users (inbox/feed)
 func GetBlogOfFollow(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -78,45 +82,50 @@ func GetBlogOfFollow(c *gin.Context) {
 }
 
 // GetBlogById 根据ID获取博客
+// EN: Get a blog by ID
 func GetBlogById(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "无效的博客ID")
-		return
-	}
+    idStr := c.Param("id")
+    id, err := strconv.ParseUint(idStr, 10, 32)
+    if err != nil {
+        utils.ErrorResponse(c, http.StatusBadRequest, "无效的博客ID")
+        return
+    }
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "用户未登录")
-		return
-	}
+    // 可未登录访问：若未登录则按未点赞处理
+    // EN: Allow unauthenticated access; if no user, treat as not liked
+    var uid uint = 0
+    if userID, exists := c.Get("userID"); exists {
+        uid = userID.(uint)
+    }
 
-	result := service.GetBlogById(c.Request.Context(), uint(id), userID.(uint))
-	utils.Response(c, result)
+    result := service.GetBlogById(c.Request.Context(), uint(id), uid)
+    utils.Response(c, result)
 }
 
 // GetHotBlogList 获取热门博客列表
+// EN: Get hot blogs sorted by likes
 func GetHotBlogList(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("current", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+    page, _ := strconv.Atoi(c.DefaultQuery("current", "1"))
+    size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "用户未登录")
-		return
-	}
+    // 可未登录访问：若未登录则按未点赞处理
+    // EN: Allow unauthenticated; if no user, treat as not liked
+    var uid uint = 0
+    if userID, exists := c.Get("userID"); exists {
+        uid = userID.(uint)
+    }
 
-	result := service.GetHotBlogList(c.Request.Context(), page, size, userID.(uint))
-	utils.Response(c, result)
+    result := service.GetHotBlogList(c.Request.Context(), page, size, uid)
+    utils.Response(c, result)
 }
 
 // GetMyBlogList 获取我的博客列表
+// EN: Get my blogs
 func GetMyBlogList(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "用户未登录")
-		return
+    userID, exists := c.Get("userID")
+    if !exists {
+        utils.ErrorResponse(c, http.StatusUnauthorized, "用户未登录")
+        return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("current", "1"))
@@ -124,4 +133,26 @@ func GetMyBlogList(c *gin.Context) {
 
 	result := service.GetMyBlogList(c.Request.Context(), userID.(uint), page, size)
 	utils.Response(c, result)
+}
+
+// GetBlogOfShop 获取指定商铺的博客列表
+// EN: Get blogs for a specific shop
+func GetBlogOfShop(c *gin.Context) {
+    shopIdStr := c.Param("id")
+    sid, err := strconv.ParseUint(shopIdStr, 10, 32)
+    if err != nil {
+        utils.ErrorResponse(c, http.StatusBadRequest, "无效的商铺ID")
+        return
+    }
+    page, _ := strconv.Atoi(c.DefaultQuery("current", "1"))
+    size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+
+    // 可未登录访问：若未登录则按未点赞处理
+    var uid uint = 0
+    if userID, exists := c.Get("userID"); exists {
+        uid = userID.(uint)
+    }
+
+    result := service.GetBlogsByShop(c.Request.Context(), uint(sid), page, size, uid)
+    utils.Response(c, result)
 }

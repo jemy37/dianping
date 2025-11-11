@@ -4,6 +4,7 @@ import "time"
 
 // SeckillVoucher 秒杀优惠券模型
 // 与优惠券是一对一关系
+// EN: Seckill voucher model (one-to-one with voucher)
 type SeckillVoucher struct {
 	VoucherID  uint      `gorm:"primaryKey;column:voucher_id" json:"voucherId"` // 关联的优惠券的id
 	Stock      int       `gorm:"column:stock;not null" json:"stock"`            // 库存

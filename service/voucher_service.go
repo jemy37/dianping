@@ -32,6 +32,55 @@ type AddSeckillVoucherRequest struct {
 	EndTime     time.Time `json:"endTime" binding:"required"`
 }
 
+// AddVoucherRequest 添加普通券请求结构
+// EN: Request payload to create a normal voucher
+type AddVoucherRequest struct {
+    ShopID      uint       `json:"shopId" binding:"required"`
+    Title       string     `json:"title" binding:"required"`
+    SubTitle    string     `json:"subTitle"`
+    Rules       string     `json:"rules"`
+    PayValue    int64      `json:"payValue" binding:"required"`
+    ActualValue int64      `json:"actualValue" binding:"required"`
+    Stock       int        `json:"stock" binding:"required,min=0"`
+    BeginTime   *time.Time `json:"beginTime"` // 可选
+    EndTime     *time.Time `json:"endTime"`   // 可选
+}
+
+// AddVoucher 添加普通券
+// EN: Create a normal voucher record
+func AddVoucher(ctx context.Context, req *AddVoucherRequest) *utils.Result {
+    // 基本校验
+    if req.PayValue >= req.ActualValue {
+        return utils.ErrorResult("支付金额必须小于实际价值")
+    }
+    if req.BeginTime != nil && req.EndTime != nil && req.EndTime.Before(*req.BeginTime) {
+        return utils.ErrorResult("结束时间不能早于开始时间")
+    }
+
+    voucher := &models.Voucher{
+        ShopID:      req.ShopID,
+        Title:       req.Title,
+        SubTitle:    req.SubTitle,
+        Rules:       req.Rules,
+        PayValue:    req.PayValue,
+        ActualValue: req.ActualValue,
+        Type:        0, // 0-普通券
+        Status:      1, // 上架
+        Stock:       req.Stock,
+        BeginTime:   req.BeginTime,
+        EndTime:     req.EndTime,
+    }
+
+    if err := dao.DB.WithContext(ctx).Create(voucher).Error; err != nil {
+        return utils.ErrorResult("创建优惠券失败")
+    }
+
+    return utils.SuccessResultWithData(map[string]any{
+        "voucherId": voucher.ID,
+        "message":   "优惠券创建成功",
+    })
+}
+
 // AddSeckillVoucher 添加秒杀券
 func AddSeckillVoucher(ctx context.Context, req *AddSeckillVoucherRequest) *utils.Result {
 	// 验证时间逻辑

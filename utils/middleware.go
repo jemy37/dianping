@@ -12,6 +12,7 @@ import (
 )
 
 // CORSMiddleware 跨域中间件
+// EN: CORS middleware allowing common methods and headers
 func CORSMiddleware() gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
@@ -29,6 +30,7 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 // LoggerMiddleware 日志中间件
+// EN: Structured access log formatter
 func LoggerMiddleware() gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"",
@@ -46,6 +48,7 @@ func LoggerMiddleware() gin.HandlerFunc {
 }
 
 // JWTMiddleware JWT认证中间件
+// EN: JWT auth middleware that extracts userID into context
 func JWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorization := c.GetHeader("Authorization")
@@ -83,6 +86,7 @@ func JWTMiddleware() gin.HandlerFunc {
 }
 
 // RecoveryMiddleware 恢复中间件
+// EN: Panic recovery to unified error response
 func RecoveryMiddleware() gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		ErrorResponse(c, http.StatusInternalServerError, "服务器内部错误")
@@ -90,6 +94,7 @@ func RecoveryMiddleware() gin.HandlerFunc {
 }
 
 // UVStatMiddleware UV统计中间件，使用Redis HyperLogLog实现
+// EN: UV statistics via Redis HyperLogLog per day key
 func UVStatMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 先执行请求

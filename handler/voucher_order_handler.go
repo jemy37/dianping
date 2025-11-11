@@ -10,6 +10,7 @@ import (
 )
 
 // SeckillVoucher 秒杀优惠券
+// EN: Purchase a seckill voucher (one per user)
 func SeckillVoucher(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

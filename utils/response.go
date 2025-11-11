@@ -7,6 +7,7 @@ import (
 )
 
 // Result 统一响应结构
+// EN: Unified API response envelope
 type Result struct {
 	Success bool        `json:"success"`
 	ErrorMsg string     `json:"errorMsg,omitempty"`
@@ -15,6 +16,7 @@ type Result struct {
 }
 
 // SuccessResult 成功响应
+// EN: Success response with message
 func SuccessResult(message string) *Result {
 	return &Result{
 		Success: true,
@@ -23,6 +25,7 @@ func SuccessResult(message string) *Result {
 }
 
 // SuccessResultWithData 成功响应带数据
+// EN: Success response with data payload
 func SuccessResultWithData(data interface{}) *Result {
 	return &Result{
 		Success: true,
@@ -31,6 +34,7 @@ func SuccessResultWithData(data interface{}) *Result {
 }
 
 // ErrorResult 错误响应
+// EN: Error response with message
 func ErrorResult(errorMsg string) *Result {
 	return &Result{
 		Success:  false,
@@ -39,6 +43,7 @@ func ErrorResult(errorMsg string) *Result {
 }
 
 // Response 统一响应处理
+// EN: Write unified response with HTTP 200 for both success/error
 func Response(c *gin.Context, result *Result) {
 	if result.Success {
 		c.JSON(http.StatusOK, result)
@@ -48,6 +53,7 @@ func Response(c *gin.Context, result *Result) {
 }
 
 // SuccessResponse 成功响应
+// EN: Shorthand success response
 func SuccessResponse(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Result{
 		Success: true,
@@ -56,6 +62,7 @@ func SuccessResponse(c *gin.Context, data interface{}) {
 }
 
 // ErrorResponse 错误响应
+// EN: Shorthand error response with HTTP status code
 func ErrorResponse(c *gin.Context, code int, message string) {
 	c.JSON(code, Result{
 		Success:  false,
@@ -64,6 +71,7 @@ func ErrorResponse(c *gin.Context, code int, message string) {
 }
 
 // PageResult 分页响应
+// EN: Paginated list response helper
 func PageResult(c *gin.Context, data interface{}, total int64, page, size int) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

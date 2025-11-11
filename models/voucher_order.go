@@ -7,6 +7,7 @@ import (
 )
 
 // VoucherOrder 优惠券订单模型
+// EN: Voucher order model (voucherType: 1=normal, 2=seckill)
 type VoucherOrder struct {
 	ID         uint           `gorm:"primarykey" json:"id"`
 	OrderID    uint           `json:"orderId"`
