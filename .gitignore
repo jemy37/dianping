@@ -1,83 +1,33 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
+# ===== General =====
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Configuration files with sensitive information
-config/application.yaml
-config/application-*.yaml
-config/*.yml
-config/*.yaml
-!config/application.yaml.example
-
-# Log files
 *.log
-logs/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Environment files
+*.tmp
+*.swp
 .env
 .env.local
-.env.*.local
+.idea/
+.vscode/
 
-# Personal information and credentials
-# Add any files that might contain personal or sensitive information
-# Examples:
-# personal_notes.txt
-# credentials.json
-# private_keys/
-
-# Build artifacts
-dist/
-build/
-
-# Temporary files
+# ===== Go (backend) =====
+# If you restructure to backend/ keep these paths under backend/
+bin/
 tmp/
-temp/
-*.tmp
-
-# Coverage reports
-coverage.txt
-coverage.html
 coverage.out
+*.test
 
-# Air live reload tool
-tmp/
+# Go vendor (uncomment if using vendoring)
+# vendor/
 
-# Any files containing developer personal information
-# (Add specific files as needed)
-test/
+# ===== Node/Vite (frontend) =====
+node_modules/
+dist/
+*.local
+*.tsbuildinfo
+
+# Vite cache
+.vite/
+
+# Coverage / reports
+coverage/
+
