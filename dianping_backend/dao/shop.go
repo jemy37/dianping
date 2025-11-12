@@ -14,10 +14,9 @@ import (
 )
 
 // GetShopById 根据ID获取商铺
-// EN: Get shop by ID from DB (cache handled in service)
+// EN: Get shop by ID from DB
 func GetShopById(ctx context.Context, db *gorm.DB, shopId uint) (*models.Shop, error) {
-    // 从缓存中获取店铺信息
-    shop := &models.Shop{}
+	shop := &models.Shop{}
 	err := db.Where("id = ?", shopId).First(shop).Error
 	if err != nil {
 		return nil, err

@@ -76,6 +76,7 @@ go run main.go
  - `POST /api/user/code?phone=` 发送验证码
   - `POST /api/user/register` 注册
   - `POST /api/user/login` 登录
+  - `POST /api/user/logout` 登出
   - `POST /api/user/login/password` 密码登录（支持手机号或昵称）
   - `GET /api/user/me` 当前用户信息（鉴权）
   - `PUT /api/user/update` 更新信息（鉴权）

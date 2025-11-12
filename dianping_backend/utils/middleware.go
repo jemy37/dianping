@@ -67,6 +67,13 @@ func JWTMiddleware() gin.HandlerFunc {
 
 		// 取出 token 并去除首尾空格
 		token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer"))
+
+		// 黑名单校验：若 token 已被登出则拒绝
+		if blacklisted, err := dao.IsTokenStringBlacklisted(c.Request.Context(), token); err == nil && blacklisted {
+			ErrorResponse(c, http.StatusUnauthorized, "token已失效，请重新登录")
+			c.Abort()
+			return
+		}
 		claims, err := ParseToken(token)
 		if err != nil {
 			// 解析失败或无效 token

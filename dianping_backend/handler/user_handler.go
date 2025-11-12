@@ -1,12 +1,14 @@
 package handler
 
 import (
-	"dianping/service"
-	"dianping/utils"
-	"net/http"
-	"time"
+    "dianping/dao"
+    "dianping/service"
+    "dianping/utils"
+    "net/http"
+    "strings"
+    "time"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
 // UserRegister 用户注册
@@ -125,10 +127,33 @@ func UpdateUserInfo(c *gin.Context) {
 }
 
 // UserLogout 用户登出
-// EN: Logout (stateless JWT; client discards token)
+// EN: Logout by blacklisting current JWT until its expiration
 func UserLogout(c *gin.Context) {
-	// TODO: 实现登出逻辑，清除token等
-	utils.SuccessResponse(c, "登出成功")
+    authorization := c.GetHeader("Authorization")
+    if authorization == "" {
+        utils.ErrorResponse(c, http.StatusUnauthorized, "未提供Authorization请求头")
+        return
+    }
+    if !strings.HasPrefix(authorization, "Bearer ") {
+        utils.ErrorResponse(c, http.StatusUnauthorized, "token格式错误")
+        return
+    }
+    token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer"))
+    claims, err := utils.ParseToken(token)
+    if err != nil || claims == nil || claims.ExpiresAt == nil {
+        utils.ErrorResponse(c, http.StatusUnauthorized, "token无效")
+        return
+    }
+    ttl := time.Until(claims.ExpiresAt.Time)
+    if ttl <= 0 {
+        utils.SuccessResponse(c, "token已过期")
+        return
+    }
+    if err := dao.BlacklistTokenString(c.Request.Context(), token, ttl); err != nil {
+        utils.ErrorResponse(c, http.StatusInternalServerError, "登出失败")
+        return
+    }
+    utils.SuccessResponse(c, "登出成功")
 }
 
 // SendCode 发送验证码

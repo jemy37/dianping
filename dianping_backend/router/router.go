@@ -30,7 +30,7 @@ func SetupRouter() *gin.Engine {
 			userGroup.POST("/register", handler.UserRegister)                       //用户注册√
 			userGroup.POST("/login", handler.UserLogin)                             // 用户登录√
 			userGroup.POST("/login/password", handler.UserPasswordLogin)            // 用户密码登录（手机号/昵称）
-			userGroup.POST("/logout", handler.UserLogout)                           // 用户登出
+			userGroup.POST("/logout", handler.UserLogout)                           // 用户登出√
 			userGroup.GET("/me", utils.JWTMiddleware(), handler.GetUserInfo)        //获取个人信息√
 			userGroup.PUT("/update", utils.JWTMiddleware(), handler.UpdateUserInfo) // 更新个人信息√
 			userGroup.POST("/sign", utils.JWTMiddleware(), handler.Sign)            // 签到

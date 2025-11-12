@@ -18,13 +18,13 @@ Content-Type: application/json
 
 {
   "phone": "13800000000",
-  "code": "879112"
+  "code": "591348"
 }
 
 
 ### Get profile
 GET http://localhost:8080/api/user/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjEwMTU2NzEsIm5iZiI6MTc2MDkyOTI3MSwiaWF0IjoxNzYwOTI5MjcxfQ.JlZMB_5Y5yQiAJCe4oY_U1gxmeJ23aR98Izon8jRCuA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjMwMTM0ODYsIm5iZiI6MTc2MjkyNzA4NiwiaWF0IjoxNzYyOTI3MDg2fQ.-1jeTUCT5FjXXQgFcA4bY0n8YCHw6gjAOhBo62wDQto
 
 
 ### Update profile
@@ -42,4 +42,9 @@ POST http://localhost:8080/api/voucher-order/seckill/17
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjExMzYzNTUsIm5iZiI6MTc2MTA0OTk1NSwiaWF0IjoxNzYxMDQ5OTU1fQ.1x8L4PJ9tncZBX2p1WqwGa7-YmZkGb7B_STEeCsuuAo
 
+
+
+### Logout current user (blacklist token)
+POST http://localhost:8080/api/user/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzcyI6ImplbXkiLCJleHAiOjE3NjMwMTM0ODYsIm5iZiI6MTc2MjkyNzA4NiwiaWF0IjoxNzYyOTI3MDg2fQ.-1jeTUCT5FjXXQgFcA4bY0n8YCHw6gjAOhBo62wDQto
 
