@@ -25,6 +25,18 @@ func GetShopById(ctx context.Context, db *gorm.DB, shopId uint) (*models.Shop, e
 	return shop, nil
 }
 
+// GetShopByNameAndAddress 根据 name 和 address 查询 Shop
+// EN: Get shop by name and address from DB
+func GetShopByNameAndAddress(ctx context.Context, db *gorm.DB, name, address string) (*models.Shop, error) {
+	shop := &models.Shop{}
+	err := db.Where("name = ?", name).Where("address = ?", address).First(shop).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return shop, nil
+}
+
 // GetAllShopIDs 获取所有商铺ID
 func GetAllShopIDs(ctx context.Context, db *gorm.DB) ([]uint, error) {
 	var ids []uint

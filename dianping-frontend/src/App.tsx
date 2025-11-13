@@ -5,6 +5,7 @@ import ShopTypeList from './pages/ShopTypeList'
 import AllShops from './pages/AllShops'
 import ShopList from './pages/ShopList'
 import ShopDetail from './pages/ShopDetail'
+import CreateShop from './pages/CreateShop'
 import Blogs from './pages/Blogs'
 import BlogDetail from './pages/BlogDetail'
 import Profile from './pages/Profile'
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/types" element={<ShopTypeList />} />
           <Route path="/shops" element={<ShopList />} />
           <Route path="/shops/by-sort" element={<ShopsBySort />} />
+          <Route path="/shop/create" element={<CreateShop />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
           <Route path="/blog" element={<Blogs />} />
           <Route path="/blog/:id" element={<BlogDetail />} />

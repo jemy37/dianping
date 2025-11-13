@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { listAllShops, listShopTypes } from '../api/shop'
 import ShopCard from '../components/ShopCard'
+import { getToken } from '../store/auth'
 
 // 首页：展示所有商铺，附带 name/address/typeId
 // 排序逻辑：按照所属类型的 sort 升序排序（sort 越小越靠前）
@@ -9,6 +11,8 @@ export default function AllShops() {
   const [types, setTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
+  const token = getToken()
 
   useEffect(() => {
     async function load() {
@@ -35,7 +39,7 @@ export default function AllShops() {
   const typeSortMap = useMemo(() => {
     const m = new Map<number, number>()
     for (const t of types) {
-      m.set(t.id, t.sort)
+      m.set(t.shopId, t.sort)
     }
     return m
   }, [types])
@@ -43,10 +47,12 @@ export default function AllShops() {
   const sorted = useMemo(() => {
     const copy = [...shops]
     copy.sort((a, b) => {
-      const sa = typeSortMap.get(a.typeId) ?? 1e9
-      const sb = typeSortMap.get(b.typeId) ?? 1e9
+      if ((a.typeId ?? 0) !== (b.typeId ?? 0)) {
+        return (a.typeId ?? 0) - (b.typeId ?? 0)
+      }
+      const sa = typeSortMap.get(a.id) ?? 1e9
+      const sb = typeSortMap.get(b.id) ?? 1e9
       if (sa !== sb) return sa - sb
-      // 次级排序：按名称
       return String(a.name).localeCompare(String(b.name))
     })
     return copy
@@ -57,10 +63,13 @@ export default function AllShops() {
 
   return (
     <div>
-      <h2>全部商铺</h2>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2>全部商铺</h2>
+        {token && <button className="btn" onClick={() => navigate('/shop/create')}>新增商铺</button>}
+      </div>
       <div className="grid">
         {sorted.map(s => (
-          <ShopCard key={s.id} shop={s} subtitle={`typeId：${s.typeId}（排序：${typeSortMap.get(s.typeId) ?? '-'})`} />
+          <ShopCard key={s.id} shop={s} subtitle={`typeId：${s.typeId}（排序：${typeSortMap.get(s.id) ?? '-'})`} />
         ))}
       </div>
     </div>

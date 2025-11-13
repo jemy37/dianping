@@ -16,6 +16,7 @@ type ShopType struct {
 	Name      string         `gorm:"size:32" json:"name"`
 	Icon      string         `gorm:"size:255" json:"icon"`
 	Sort      int            `json:"sort"`
+	ShopId    uint           `json:"shopId"`
 }
 
 func (ShopType) TableName() string {

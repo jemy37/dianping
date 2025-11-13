@@ -279,7 +279,7 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 		}
 		// 未拿到锁：短等待后再次检查数据库
 		time.Sleep(50 * time.Millisecond)
-		if existing, err := dao.GetShopById(ctx, dao.DB, shop.ID); err == nil && existing != nil {
+		if existing, err := dao.GetShopByNameAndAddress(ctx, dao.DB, shop.Name, shop.Address); err == nil && existing != nil {
 			return utils.SuccessResultWithData(existing)
 
 		} else {
@@ -295,7 +295,7 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 	}
 
 	// 再次检查 DB，以防并发已创建
-	if existing, err := dao.GetShopById(ctx, dao.DB, shop.ID); err == nil && existing != nil {
+	if existing, err := dao.GetShopByNameAndAddress(ctx, dao.DB, shop.Name, shop.Address); err == nil && existing != nil {
 
 		return utils.SuccessResultWithData(existing)
 	}
@@ -308,9 +308,15 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 		}
 	}()
 
+	if err := dao.CreateShop(ctx, tx, shop); err != nil {
+		tx.Rollback()
+		return utils.ErrorResult("创建商铺失败: " + err.Error())
+	}
+
 	st := &models.ShopType{
-		Name: typeName,
-		Icon: typeIcon,
+		Name:   typeName,
+		Icon:   typeIcon,
+		TypeID: shop.TypeID,
 	}
 	if err := dao.CreateShopType(ctx, tx, st); err != nil {
 		tx.Rollback()
@@ -318,14 +324,10 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 	}
 	// 用回写ID的方式设置 Sort = int(st.ID)
 	st.Sort = int(st.ID)
+	st.ShopId = shop.ID
 	if err := dao.UpdateShopType(ctx, tx, st); err != nil {
 		tx.Rollback()
 		return utils.ErrorResult("更新 ShopType Sort 失败: " + err.Error())
-	}
-	shop.TypeID = st.ID
-	if err := dao.CreateShop(ctx, tx, shop); err != nil {
-		tx.Rollback()
-		return utils.ErrorResult("创建商铺失败: " + err.Error())
 	}
 
 	if err := tx.Commit().Error; err != nil {
