@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var shopSF utils.SingleflightGroup
+
 // GetShopById 根据ID获取商铺
 func GetShopById(ctx context.Context, id uint) *utils.Result {
 	// 1. 布隆过滤器检查，防止缓存击穿
@@ -24,54 +26,29 @@ func GetShopById(ctx context.Context, id uint) *utils.Result {
 		return utils.ErrorResult("商铺不存在")
 	}
 
-	// 2. 先从缓存查询
-	shop, err := dao.GetShopCacheById(ctx, dao.Redis, id)
-	if err == nil && shop != nil {
-		// 缓存命中，直接返回
-		return utils.SuccessResultWithData(shop)
-	}
-
-	// 3. 缓存未命中，使用互斥锁防止缓存击穿
-	lockKey := fmt.Sprintf("lock:shop:%d", id)
-
-	// 尝试获取锁
-	if !utils.TryLock(ctx, dao.Redis, lockKey) {
-		// 获取锁失败，等待一段时间后重新查询缓存
-		time.Sleep(50 * time.Millisecond)
-		shop, err = dao.GetShopCacheById(ctx, dao.Redis, id)
-		if err == nil && shop != nil {
-			return utils.SuccessResultWithData(shop)
+	// 2. 先读取带逻辑过期的缓存
+	if cached, fresh, err := dao.GetShopCacheByIdWithLogicalExpire(ctx, dao.Redis, id); err == nil && cached != nil {
+		if fresh {
+			return utils.SuccessResultWithData(cached)
 		}
-		// 如果缓存仍然没有数据，返回错误
-		return utils.ErrorResult("服务繁忙，请稍后重试")
+		go tryRebuildShopCache(context.Background(), id)
+		return utils.SuccessResultWithData(cached)
 	}
 
-	// 获取锁成功，确保释放锁
-	defer utils.UnLock(ctx, dao.Redis, lockKey)
-
-	// 再次检查缓存（双重检查锁定模式）
-	shop, err = dao.GetShopCacheById(ctx, dao.Redis, id)
-	if err == nil && shop != nil {
-		// 缓存命中，直接返回
-		return utils.SuccessResultWithData(shop)
-	}
-
-	// 4. 查询数据库
-	shop, err = dao.GetShopById(ctx, dao.DB, id)
+	// 3. 使用 singleflight 合并并发重建
+	key := fmt.Sprintf("shop:%d", id)
+	val, err := shopSF.Do(key, func() (interface{}, error) {
+		if cached, fresh, err := dao.GetShopCacheByIdWithLogicalExpire(ctx, dao.Redis, id); err == nil && cached != nil {
+			if fresh {
+				return cached, nil
+			}
+		}
+		return loadAndFillShopCache(ctx, id)
+	})
 	if err != nil {
-		// 数据库查询失败
 		return utils.ErrorResult("查询失败: " + err.Error())
 	}
-
-	// 5. 设置缓存
-	err = dao.SetShopCacheById(ctx, dao.Redis, id, shop)
-	if err != nil {
-		// 缓存设置失败，记录日志但不影响返回结果
-		log.Printf("设置缓存失败: %v", err)
-	}
-
-	// 6. 返回结果
-	return utils.SuccessResultWithData(shop)
+	return utils.SuccessResultWithData(val)
 }
 
 // UpdateShopById 根据ID更新商铺
@@ -206,6 +183,68 @@ func GetNearbyShops(ctx context.Context, shopId uint, radius float64, count int)
 	return utils.SuccessResultWithData(shopIds)
 }
 
+func tryRebuildShopCache(ctx context.Context, id uint) {
+	lockKey := fmt.Sprintf("lock:shop:rebuild:%d", id)
+	ok, lockVal := utils.TryLockWithTTL(ctx, dao.Redis, lockKey, 5*time.Second)
+	if !ok {
+		return
+	}
+	defer utils.UnLockSafe(ctx, dao.Redis, lockKey, lockVal)
+	if _, err := loadAndFillShopCache(ctx, id); err != nil {
+		log.Printf("异步重建商铺缓存失败: %v", err)
+	}
+}
+
+func loadAndFillShopCache(ctx context.Context, id uint) (*models.Shop, error) {
+	lockKey := fmt.Sprintf("lock:shop:%d", id)
+	ok, lockVal := utils.TryLockWithTTL(ctx, dao.Redis, lockKey, 5*time.Second)
+	if !ok {
+		base := 50 * time.Millisecond
+		waited := time.Duration(0)
+		for i := 0; i < 5 && waited < 500*time.Millisecond; i++ {
+			time.Sleep(base)
+			waited += base
+			base *= 2
+			if base > 200*time.Millisecond {
+				base = 200 * time.Millisecond
+			}
+			if cached, _, err := dao.GetShopCacheByIdWithLogicalExpire(ctx, dao.Redis, id); err == nil && cached != nil {
+				return cached, nil
+			}
+		}
+		var retry bool
+		retry, lockVal = utils.TryLockWithTTL(ctx, dao.Redis, lockKey, 3*time.Second)
+		if !retry {
+			if cached, _, err := dao.GetShopCacheByIdWithLogicalExpire(ctx, dao.Redis, id); err == nil && cached != nil {
+				return cached, nil
+			}
+			return nil, fmt.Errorf("服务繁忙")
+		}
+		ok = true
+	}
+	defer func() {
+		if ok {
+			utils.UnLockSafe(ctx, dao.Redis, lockKey, lockVal)
+		}
+	}()
+
+	shop, err := dao.GetShopById(ctx, dao.DB, id)
+	if err != nil {
+		return nil, err
+	}
+
+	ttlMinutes := 30 + (rand.IntN(10) - 5)
+	if ttlMinutes < 5 {
+		ttlMinutes = 5
+	}
+	expireAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute).Unix()
+	realTTL := 24 * time.Hour
+	if err := dao.SetShopCacheByIdWithLogicalExpire(ctx, dao.Redis, id, shop, expireAt, realTTL); err != nil {
+		log.Printf("设置逻辑过期缓存失败: %v", err)
+	}
+	return shop, nil
+}
+
 // CreateShopWithType 创建类型商铺
 
 func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string) *utils.Result {
@@ -293,6 +332,13 @@ func CreateShopWithType(ctx context.Context, shop *models.Shop, typeIcon string)
 		tx.Rollback()
 		return utils.ErrorResult("提交事务失败: " + err.Error())
 	}
+
+	go func(id uint) {
+		bf := utils.CreateShopBloomFilter(dao.Redis)
+		if _, err := bf.AddID(context.Background(), id); err != nil {
+			log.Printf("添加商铺ID到Bloom失败: %v", err)
+		}
+	}(shop.ID)
 
 	return utils.SuccessResultWithData(shop.ID)
 }

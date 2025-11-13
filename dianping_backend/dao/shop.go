@@ -50,6 +50,11 @@ const (
 	ShopLocationCache = "cache:shop:location:"
 )
 
+type logicalShopCache struct {
+	Data     *models.Shop `json:"data"`
+	ExpireAt int64        `json:"expireAt"`
+}
+
 func GetShopCacheById(ctx context.Context, rds *redis.Client, shopId uint) (*models.Shop, error) {
 	key := ShopCache + strconv.Itoa(int(shopId))
 	result := rds.Get(ctx, key)
@@ -92,6 +97,51 @@ func SetShopCacheById(ctx context.Context, rds *redis.Client, shopId uint, shop 
 	err = rds.Set(ctx, ShopCache+strconv.Itoa(int(shopId)), jsonData, time.Hour).Err()
 	if err != nil {
 		return fmt.Errorf("failed to set cache: %w", err)
+	}
+	return nil
+}
+
+func GetShopCacheByIdWithLogicalExpire(ctx context.Context, rds *redis.Client, shopId uint) (*models.Shop, bool, error) {
+	key := ShopCache + strconv.Itoa(int(shopId))
+	result := rds.Get(ctx, key)
+	if result.Err() != nil {
+		if errors.Is(result.Err(), redis.Nil) {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("redis query failed: %w", result.Err())
+	}
+
+	jsonStr, err := result.Result()
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to get cache result: %w", err)
+	}
+
+	var env logicalShopCache
+	if err := json.Unmarshal([]byte(jsonStr), &env); err != nil {
+		var shop models.Shop
+		if err2 := json.Unmarshal([]byte(jsonStr), &shop); err2 == nil {
+			return &shop, true, nil
+		}
+		return nil, false, fmt.Errorf("cache data unmarshal failed: %w", err)
+	}
+
+	if env.Data == nil {
+		return nil, false, nil
+	}
+	return env.Data, time.Now().Unix() <= env.ExpireAt, nil
+}
+
+func SetShopCacheByIdWithLogicalExpire(ctx context.Context, rds *redis.Client, shopId uint, shop *models.Shop, expireAt int64, ttl time.Duration) error {
+	cache := logicalShopCache{Data: shop, ExpireAt: expireAt}
+	jsonData, err := json.Marshal(cache)
+	if err != nil {
+		return fmt.Errorf("failed to marshal logical cache: %w", err)
+	}
+	if ttl <= 0 {
+		ttl = 24 * time.Hour
+	}
+	if err := rds.Set(ctx, ShopCache+strconv.Itoa(int(shopId)), jsonData, ttl).Err(); err != nil {
+		return fmt.Errorf("failed to set logical cache: %w", err)
 	}
 	return nil
 }
